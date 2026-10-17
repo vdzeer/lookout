@@ -1,0 +1,181 @@
+{
+  "name": "lookout",
+  "displayName": "Lookout",
+  "description": "Claude Code sessions and usage limits in the status bar: what is working, what waits for you, and how much of the 5-hour and weekly limits is used, across every window and terminal.",
+  "version": "0.1.0",
+  "publisher": "vdzeer",
+  "private": true,
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1B1F27",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/vdzeer/lookout#readme",
+  "bugs": {
+    "url": "https://github.com/vdzeer/lookout/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vdzeer/lookout"
+  },
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "claude code",
+    "ai agents",
+    "status bar",
+    "usage limits",
+    "rate limits",
+    "notifications",
+    "sessions",
+    "terminal"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "extensionKind": [
+    "ui"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "lookout.showSessions",
+        "title": "Go to Session…",
+        "category": "Lookout"
+      },
+      {
+        "command": "lookout.showLimits",
+        "title": "Show Usage Limits",
+        "category": "Lookout"
+      },
+      {
+        "command": "lookout.setUpLimits",
+        "title": "Set Up Usage Limits",
+        "category": "Lookout"
+      },
+      {
+        "command": "lookout.removeLimits",
+        "title": "Remove Usage Limits",
+        "category": "Lookout"
+      },
+      {
+        "command": "lookout.mute",
+        "title": "Mute Notifications for 1 Hour",
+        "category": "Lookout"
+      },
+      {
+        "command": "lookout.unmute",
+        "title": "Unmute Notifications",
+        "category": "Lookout"
+      }
+    ],
+    "configuration": {
+      "title": "Lookout",
+      "properties": {
+        "lookout.scope": {
+          "type": "string",
+          "enum": [
+            "all",
+            "window"
+          ],
+          "enumDescriptions": [
+            "Every session on this computer, grouped by window in the tooltip.",
+            "Only sessions running in this window."
+          ],
+          "default": "all",
+          "markdownDescription": "Which Claude Code sessions the status bar shows."
+        },
+        "lookout.limits.showWeekly": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the weekly limit next to the 5-hour limit."
+        },
+        "lookout.limits.thresholds": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "default": [
+            80,
+            95
+          ],
+          "markdownDescription": "Usage levels, in percent. From the lowest one the limits item turns yellow and a notification says the limit is getting close; from the highest one it turns red and shows when the limit resets."
+        },
+        "lookout.notifications.needsYou": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Notify when a session waits for you: a permission prompt, a question or another dialog."
+        },
+        "lookout.notifications.finished": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Notify when a session finishes a turn that took at least `#lookout.notifications.finishedAfterSeconds#` seconds."
+        },
+        "lookout.notifications.finishedAfterSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "default": 60,
+          "markdownDescription": "How long a turn must take before its end is worth a notification."
+        },
+        "lookout.notifications.limitNear": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Notify when the 5-hour or weekly limit reaches one of `#lookout.limits.thresholds#`."
+        },
+        "lookout.notifications.limitReset": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Notify when a limit that reached the highest threshold resets."
+        },
+        "lookout.notifications.system": {
+          "type": "string",
+          "enum": [
+            "whenUnfocused",
+            "always",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Only when no editor window is in front.",
+            "Always.",
+            "Never."
+          ],
+          "default": "whenUnfocused",
+          "markdownDescription": "Also show notifications in macOS Notification Center. They come from a system helper, so they carry the Script Editor icon, and clicking one opens Script Editor; the editor's own notification has the buttons."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "lint": "tsc -p tsconfig.json --noEmit && eslint .",
+    "test": "node scripts/test.mjs",
+    "package": "npm run build -- --production && vsce package --no-dependencies -o dist/lookout.vsix",
+    "install-ext": "npm run package && node scripts/install.mjs",
+    "vscode:uninstall": "node ./dist/uninstall.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.20.3",
+    "@types/vscode": "1.105.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.11.0",
+    "globals": "17.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0"
+  }
+}

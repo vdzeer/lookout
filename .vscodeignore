@@ -1,0 +1,8 @@
+**
+!dist/extension.js
+!media/icon.png
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!dist/uninstall.js
