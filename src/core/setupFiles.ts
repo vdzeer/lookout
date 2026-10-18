@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 import type { Paths } from './paths';
-import { parseSettings, parseSetupRecord, serializeSettings, TAP_SCRIPT, tapCommand, tapStatus, withoutTap, withTap, type SetupRecord } from './tap';
+import { isTapLeftover, parseSettings, parseSetupRecord, serializeSettings, TAP_SCRIPT, tapCommand, tapStatus, withoutTap, withTap, type SetupRecord } from './tap';
 import { writeFileAtomic } from './windows';
 
 // Adding and removing the status line step on disk. Only `statusLine` in
@@ -104,6 +105,25 @@ function writeSettings(file: string, content: string): void {
     // A new file.
   }
   writeFileAtomic(target, content, mode);
+}
+
+const LEFTOVER_MS = 60_000;
+
+/**
+ * Brings a script written by an earlier version up to date (0.1.0 kept the
+ * input only after the user's command, so a cancelled run lost it) and
+ * removes the inputs such runs left behind.
+ */
+export function updateTapScript(paths: Paths, now = Date.now()): void {
+  try {
+    if (readIfExists(paths.tapScript) !== TAP_SCRIPT) writeFileAtomic(paths.tapScript, TAP_SCRIPT, 0o700);
+    for (const name of fs.readdirSync(paths.lookout).filter(isTapLeftover)) {
+      const file = path.join(paths.lookout, name);
+      if (now - fs.statSync(file).mtimeMs > LEFTOVER_MS) fs.rmSync(file, { force: true });
+    }
+  } catch {
+    // Tried again on the next start.
+  }
 }
 
 /** The last status line input, when a session reported one. */

@@ -2,7 +2,7 @@
   "name": "lookout",
   "displayName": "Lookout",
   "description": "Claude Code sessions and usage limits in the status bar: what is working, what waits for you, and how much of the 5-hour and weekly limits is used, across every window and terminal.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "vdzeer",
   "private": true,
   "license": "MIT",

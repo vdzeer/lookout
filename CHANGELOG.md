@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+
+- Usage limits now follow every reply. The status line step kept the input
+  only after your own status line command had finished, and Claude Code
+  cancels a command that is still running when the next update comes, so
+  with a slower status line most updates were lost while a session worked.
+  The input is now kept first. A step set up by 0.1.0 is updated when the
+  extension starts, and the files cancelled runs left in
+  `~/.claude/lookout/` are removed.
+
 ## 0.1.0
 
 First release.

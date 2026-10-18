@@ -11,7 +11,7 @@ import { claudeConfigDir, displayPath, pathsFor, type Paths } from '../core/path
 import { isThisWindow, placeOf, type Session } from '../core/places';
 import { isSameProcess, readProcesses, type ProcessTable } from '../core/processes';
 import { isSessionFileName, parseSessionFile, type SessionFile } from '../core/sessions';
-import { installTap, readTapInput, removeTap, tapHealth, type SetupResult, type TapHealth } from '../core/setupFiles';
+import { installTap, readTapInput, removeTap, tapHealth, updateTapScript, type SetupResult, type TapHealth } from '../core/setupFiles';
 import { groupSessions, limitsText, placeLabel, sessionsText, stateIcon, stateLabel, tooltipMarkdown, type ViewInput } from '../core/view';
 import { isFresh, readWindowRecords, writeFileAtomic, writeWindowRecord, type WindowRecord } from '../core/windows';
 
@@ -138,6 +138,7 @@ export class Lookout implements vscode.Disposable {
     // Records of windows that closed without saying so (a crash, a killed editor).
     pruneClaims(this.paths.windows, CLAIM_TTL_MS / 2);
     this.health = tapHealth(this.paths);
+    if (this.health === 'ok') updateTapScript(this.paths);
     this.watch();
     this.timers.push(
       setInterval(() => this.render(), TICK_MS),

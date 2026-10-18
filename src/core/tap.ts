@@ -12,15 +12,17 @@ export const TAP_SCRIPT = `#!/bin/sh
 umask 077
 dir=$(dirname "$0")
 tmp="$dir/statusline.$$.tmp"
-cat > "$tmp" || exit 0
-status=0
-if [ -s "$dir/statusline-command" ]; then
-  sh -c "$(cat "$dir/statusline-command")" < "$tmp"
-  status=$?
-fi
+cat > "$tmp" || { rm -f "$tmp"; exit 0; }
+# Kept before your command runs: Claude Code cancels a status line command
+# that is still running when the next update comes.
+exec < "$tmp"
 mv -f "$tmp" "$dir/statusline.json"
-exit $status
+[ -s "$dir/statusline-command" ] || exit 0
+exec sh -c "$(cat "$dir/statusline-command")"
 `;
+
+/** What a status line run left behind when it was cancelled while reading its input. */
+export const isTapLeftover = (name: string): boolean => /^statusline\.\d+\.tmp$/.test(name);
 
 /** Single quotes for sh, safe for any path. */
 export function shellQuote(value: string): string {

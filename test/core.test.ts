@@ -13,7 +13,7 @@ import { claudeConfigDir, displayPath, pathsFor } from '../src/core/paths';
 import { placeOf, type Session, type ThisWindow } from '../src/core/places';
 import { ancestry, appOf, isSameProcess, parsePs } from '../src/core/processes';
 import { parseSessionFile, type SessionFile } from '../src/core/sessions';
-import { installTap, removeTap, tapHealth } from '../src/core/setupFiles';
+import { installTap, removeTap, tapHealth, updateTapScript } from '../src/core/setupFiles';
 import { parseSettings, serializeSettings, shellQuote, TAP_SCRIPT, tapCommand, tapStatus, withoutTap, withTap } from '../src/core/tap';
 import { escapeMarkdown, groupSessions, limitsText, sessionsText, tooltipMarkdown, type ViewInput } from '../src/core/view';
 import { isFresh, parseWindowRecord, type WindowRecord } from '../src/core/windows';
@@ -404,6 +404,33 @@ describe('status line step', () => {
     const quiet = spawnSync('sh', [path.join(dir, 'statusline.sh')], { input: '{}', encoding: 'utf8' });
     assert.equal(quiet.stdout, '');
     assert.equal(quiet.status, 0);
+  });
+
+  it('the script keeps the input even when Claude Code cancels the original command', () => {
+    const dir = tmp();
+    fs.writeFileSync(path.join(dir, 'statusline.sh'), TAP_SCRIPT);
+    fs.writeFileSync(path.join(dir, 'statusline-command'), 'sleep 5');
+    const input = JSON.stringify({ rate_limits: { five_hour: { used_percentage: 7, resets_at: 1 } } });
+    const run = spawnSync('sh', [path.join(dir, 'statusline.sh')], { input, encoding: 'utf8', timeout: 500 });
+    assert.equal(run.signal, 'SIGTERM');
+    assert.equal(fs.readFileSync(path.join(dir, 'statusline.json'), 'utf8'), input);
+    assert.deepEqual(fs.readdirSync(dir).filter((f) => f.endsWith('.tmp')), []);
+  });
+
+  it('brings an earlier script up to date and removes what cancelled runs left', () => {
+    const paths = pathsFor(tmp());
+    fs.mkdirSync(paths.lookout, { recursive: true });
+    fs.writeFileSync(paths.tapScript, '#!/bin/sh\n# 0.1.0\n');
+    const old = path.join(paths.lookout, 'statusline.123.tmp');
+    const fresh = path.join(paths.lookout, 'statusline.456.tmp');
+    fs.writeFileSync(old, '{}');
+    fs.writeFileSync(fresh, '{}');
+    fs.utimesSync(old, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
+    updateTapScript(paths);
+    assert.equal(fs.readFileSync(paths.tapScript, 'utf8'), TAP_SCRIPT);
+    assert.equal(fs.statSync(paths.tapScript).mode & 0o777, 0o700);
+    assert.equal(fs.existsSync(old), false);
+    assert.equal(fs.existsSync(fresh), true);
   });
 });
 
